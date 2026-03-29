@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bhavya's Jukebox</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Courier+Prime:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f5ead8;
+    --warm-brown: #6b3f1e;
+    --dark-brown: #3b1f0a;
+    --amber: #c8821a;
+    --gold: #d4a030;
+    --speaker-dark: #2a1505;
+    --dial-light: #e8c87a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark-brown);
+    background-image:
+      radial-gradient(ellipse at 25% 15%, rgba(180,100,20,0.18) 0%, transparent 55%),
+      radial-gradient(ellipse at 75% 85%, rgba(100,40,10,0.22) 0%, transparent 55%),
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+    font-family: 'Courier Prime', monospace;
+  }
+
+  .radio-cabinet {
+    background: linear-gradient(160deg, #7a4520 0%, #5a2e10 40%, #3e1e08 100%);
+    border-radius: 18px 18px 12px 12px;
+    padding: 28px 32px 32px;
+    max-width: 720px;
+    width: 100%;
+    box-shadow:
+      0 0 0 3px #c8821a,
+      0 0 0 5px #3b1f0a,
+      0 16px 70px rgba(0,0,0,0.75),
+      inset 0 1px 0 rgba(255,220,120,0.3),
+      inset 0 -2px 4px rgba(0,0,0,0.5);
+    position: relative;
+  }
+
+  .radio-cabinet::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 18px 18px 12px 12px;
+    background: repeating-linear-gradient(88deg,
+      transparent 0px, transparent 8px,
+      rgba(0,0,0,0.04) 8px, rgba(0,0,0,0.04) 9px,
+      transparent 9px, transparent 18px);
+    pointer-events: none;
+  }
+
+  .brand-plate { text-align: center; margin-bottom: 20px; }
+
+  .brand-title {
+    font-family: 'Special Elite', cursive;
+    color: var(--gold);
+    font-size: 2.1rem;
+    letter-spacing: 0.18em;
+    text-shadow: 0 0 24px rgba(212,160,48,0.55), 1px 1px 0 #3b1f0a;
+  }
+
+  .brand-subtitle {
+    font-family: 'Courier Prime', monospace;
+    color: var(--amber);
+    font-size: 0.68rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-top: 3px;
+  }
+
+  /* Display */
+  .display-screen {
+    background: #0d0800;
+    border: 3px solid var(--warm-brown);
+    border-radius: 8px;
+    padding: 18px 22px 16px;
+    margin-bottom: 18px;
+    position: relative;
+    box-shadow: inset 0 0 30px rgba(200,130,26,0.1), inset 0 0 8px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.4);
+    min-height: 110px;
+  }
+
+  .display-screen::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 6px;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .display-inner { position: relative; z-index: 2; }
+
+  .now-playing-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.32em;
+    color: var(--amber);
+    opacity: 0.55;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .song-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.45rem;
+    color: var(--gold);
+    text-shadow: 0 0 14px rgba(212,160,48,0.55);
+    line-height: 1.2;
+    transition: opacity 0.3s ease;
+  }
+
+  .song-meta {
+    font-family: 'Courier Prime', monospace;
+    color: #a07040;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+    transition: opacity 0.3s ease;
+  }
+
+  .song-note {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: #c8a060;
+    font-size: 0.84rem;
+    margin-top: 9px;
+    line-height: 1.55;
+    transition: opacity 0.3s ease;
+    border-left: 2px solid rgba(212,160,48,0.3);
+    padding-left: 10px;
+  }
+
+  .freq-bar {
+    margin-top: 12px;
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+    height: 18px;
+  }
+
+  .freq-bar span {
+    flex: 1;
+    background: var(--amber);
+    border-radius: 1px;
+    opacity: 0.6;
+    transform-origin: bottom;
+    transform: scaleY(0.3);
+  }
+
+  .freq-bar.playing span { animation: freq 0.8s ease-in-out infinite alternate; }
+
+  @keyframes freq {
+    from { transform: scaleY(0.2); }
+    to   { transform: scaleY(1); }
+  }
+
+  .freq-bar span:nth-child(1) { animation-delay: 0.00s; animation-duration: 0.60s; }
+  .freq-bar span:nth-child(2) { animation-delay: 0.10s; animation-duration: 0.90s; }
+  .freq-bar span:nth-child(3) { animation-delay: 0.05s; animation-duration: 0.70s; }
+  .freq-bar span:nth-child(4) { animation-delay: 0.15s; animation-duration: 0.80s; }
+  .freq-bar span:nth-child(5) { animation-delay: 0.00s; animation-duration: 1.00s; }
+  .freq-bar span:nth-child(6) { animation-delay: 0.20s; animation-duration: 0.65s; }
+  .freq-bar span:nth-child(7) { animation-delay: 0.08s; animation-duration: 0.85s; }
+  .freq-bar span:nth-child(8) { animation-delay: 0.12s; animation-duration: 0.75s; }
+
+  /* Spotify embed */
+  .spotify-wrap {
+    margin-bottom: 18px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+
+  .spotify-wrap iframe {
+    display: block;
+    border: none;
+    width: 100%;
+    height: 80px;
+    border-radius: 10px;
+    transition: opacity 0.3s ease;
+  }
+
+  /* Tuner */
+  .tuner-section {
+    background: #1a0d04;
+    border: 2px solid #5a3010;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tuner-needle {
+    position: absolute;
+    top: 0; bottom: 0; width: 2px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    left: 50%;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .tuner-track {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    user-select: none;
+  }
+  .tuner-track::-webkit-scrollbar { display: none; }
+
+  .tuner-btn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 7px 13px;
+    font-family: 'Special Elite', cursive;
+    font-size: 0.7rem;
+    color: #806040;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    border-right: 1px solid #3a2010;
+    letter-spacing: 0.05em;
+  }
+  .tuner-btn:hover { color: var(--amber); }
+  .tuner-btn.active { color: var(--gold); text-shadow: 0 0 8px rgba(212,160,48,0.75); background: rgba(200,130,26,0.1); }
+
+  /* Controls */
+  .controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .dial-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+
+  .dial {
+    width: 62px; height: 62px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--dial-light), #a07020 40%, #5a3a0a 80%, #2a1505);
+    border: 3px solid #3a2010;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,200,0.2), 0 0 0 1px #7a5020;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.35s cubic-bezier(.4,2,.6,1), filter 0.2s;
+  }
+
+  .dial::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 4px; height: 22px;
+    background: var(--dark-brown);
+    border-radius: 2px;
+    transform-origin: bottom center;
+    transform: translate(-50%, -100%);
+  }
+
+  .dial:hover { filter: brightness(1.12); }
+  .dial:active { filter: brightness(0.9); }
+
+  .dial-label { font-size: 0.54rem; letter-spacing: 0.2em; color: #806040; text-transform: uppercase; }
+
+  .speaker-grille {
+    flex: 1;
+    height: 62px;
+    background: var(--speaker-dark);
+    border: 2px solid #3a2010;
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: repeat(13, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 3px;
+    padding: 6px;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.85);
+  }
+
+  .speaker-dot {
+    border-radius: 50%;
+    background: #1a0d04;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.9);
+    transition: background 0.3s;
+  }
+
+  .speaker-dot.lit { background: rgba(200,130,26,0.3); }
+
+  .nav-btn {
+    background: linear-gradient(145deg, #7a4520, #4a2510);
+    border: 2px solid #9a6030;
+    border-radius: 50%;
+    width: 44px; height: 44px;
+    color: var(--gold);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,220,100,0.2);
+    transition: all 0.15s ease;
+  }
+  .nav-btn:hover { background: linear-gradient(145deg, #9a5530, #6a3520); transform: scale(1.06); }
+  .nav-btn:active { transform: scale(0.94); }
+
+  /* Playlist */
+  .song-list-section { margin-top: 28px; max-width: 720px; width: 100%; }
+
+  .section-label {
+    font-family: 'Special Elite', cursive;
+    color: var(--amber);
+    font-size: 0.68rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 11px;
+    padding-left: 4px;
+  }
+
+  .song-card {
+    background: linear-gradient(135deg, #4a2810 0%, #3a1e08 100%);
+    border: 1px solid #6a3a18;
+    border-radius: 6px;
+    padding: 13px 16px;
+    margin-bottom: 7px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .song-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--amber);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .song-card:hover { border-color: var(--amber); transform: translateX(3px); }
+  .song-card:hover::before { opacity: 1; }
+  .song-card.active { border-color: var(--gold); background: linear-gradient(135deg, #5a3218 0%, #4a2810 100%); box-shadow: 0 0 14px rgba(212,160,48,0.18); }
+  .song-card.active::before { opacity: 1; background: var(--gold); }
+
+  .card-num { font-family: 'Special Elite', cursive; color: #806040; font-size: 0.72rem; min-width: 22px; padding-top: 3px; }
+  .card-info { flex: 1; }
+  .card-title { font-family: 'Playfair Display', serif; color: var(--cream); font-size: 0.93rem; line-height: 1.3; }
+  .card-meta { font-family: 'Courier Prime', monospace; color: #806040; font-size: 0.68rem; margin-top: 2px; letter-spacing: 0.05em; }
+  .card-note { font-family: 'Playfair Display', serif; font-style: italic; color: #a07848; font-size: 0.75rem; margin-top: 5px; line-height: 1.45; border-left: 2px solid rgba(212,160,48,0.2); padding-left: 8px; }
+  .card-arrow { color: #806040; font-size: 0.75rem; padding-top: 4px; transition: color 0.2s; }
+  .song-card:hover .card-arrow, .song-card.active .card-arrow { color: var(--gold); }
+
+  @keyframes glow-pulse {
+    0%,100% { text-shadow: 0 0 12px rgba(212,160,48,0.55); }
+    50%      { text-shadow: 0 0 28px rgba(212,160,48,0.95), 0 0 50px rgba(212,160,48,0.25); }
+  }
+  .song-title.playing { animation: glow-pulse 2.2s ease-in-out infinite; }
+  .fade-out { opacity: 0 !important; }
+</style>
+</head>
+<body>
+
+<div class="radio-cabinet">
+  <div class="brand-plate">
+    <div class="brand-title">Bhavya's Jukebox</div>
+    <div class="brand-subtitle">Turn the knob · Let it play</div>
+  </div>
+
+  <div class="display-screen">
+    <div class="display-inner">
+      <div class="now-playing-label" id="status-label">● Tune in</div>
+      <div class="song-title" id="display-title">Rasiya (Reprise)</div>
+      <div class="song-meta" id="display-meta">Arijit Singh · 2022</div>
+      <div class="song-note" id="display-note">What I think should be the background score of love stories.</div>
+      <div class="freq-bar" id="freq-bar">
+        <span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="spotify-wrap">
+    <iframe id="spotify-iframe"
+      src="https://open.spotify.com/embed/track/3f9dNrQR4stx9CCfpqZVSf?utm_source=generator&theme=0"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      loading="lazy">
+    </iframe>
+  </div>
+
+  <div class="tuner-section">
+    <div class="tuner-needle"></div>
+    <div class="tuner-track" id="tuner-track"></div>
+  </div>
+
+  <div class="controls-row">
+    <div class="dial-wrap">
+      <div class="dial" id="dial-prev" title="Previous"></div>
+      <div class="dial-label">Prev</div>
+    </div>
+
+    <div class="speaker-grille" id="speaker"></div>
+
+    <button class="nav-btn" id="prev-btn">◀</button>
+    <button class="nav-btn" id="next-btn">▶</button>
+
+    <div class="dial-wrap">
+      <div class="dial" id="dial-next" title="Next"></div>
+      <div class="dial-label">Next</div>
+    </div>
+  </div>
+</div>
+
+<div class="song-list-section">
+  <div class="section-label">📻 Station Playlist</div>
+  <div id="song-list"></div>
+</div>
+
+<script>
+const songs = [
+  { title:"Rasiya (Reprise)",       meta:"Arijit Singh · 2022",                note:"What I think should be the background score of love stories.",                                     spotifyId:"3f9dNrQR4stx9CCfpqZVSf" },
+  { title:"Tu Hi Mera",             meta:"Shafqat Amanat Ali · 2012",          note:'Inject the lines "ummeed yeh seene mein leke main hoon jee raha" into my veins.',                  spotifyId:"1CVqr5LImdmJ1Upt4z08Pm" },
+  { title:"Abhi Na Jaao Chhodkar",  meta:"Mohammed Rafi, Asha Bhosle · 1961",  note:"The most beautiful feeling in the world expressed in the most heartfelt way.",                    spotifyId:"0C47mkZ7VGcnKBvEG7PiAP" },
+  { title:"Tuu",                    meta:"Javed Ali, Sukhwinder Singh · 2024",  note:"The one song I intend to gatekeep.",                                                               spotifyId:"1If0kDvcijnIBlcVMnCpei" },
+  { title:"Tum Tak",                meta:"Javed Ali · 2013",                    note:'"Naino ke ghaat le jaa, naino ki naiyaa, patwaar tu hai meri, tu khivaiyaa"',                      spotifyId:"1wnozUBSe7OMpmZiTPJC5j" },
+  { title:"Chaav Laga",             meta:"Papon, Ronkini Gupta · 2018",         note:"A Varun Grover lyrical masterpiece.",                                                              spotifyId:"5kg2ceXdet9ZYD5EsFDDSP" },
+  { title:"Chaudhary",              meta:"Mame Khan, Amit Trivedi · 2012",      note:"What I feel is a more layered exploration of love.",                                               spotifyId:"5Xe4kq8j3saW89CSNQGawF" },
+  { title:"Bekhayali",              meta:"Arijit Singh · 2019",                 note:"2019. Enough said.",                                                                               spotifyId:"47Il9B5GJ2FEkiwiIH3xX0" },
+  { title:"Rehna Tu",               meta:"A.R. Rahman · 2009",                  note:"On being enough as you are.",                                                                      spotifyId:"5RZbS87YI2wd87SWuO0YAX" },
+  { title:"Choo Lo",                meta:"The Local Train · 2015",              note:"This song kicks off a completely unrelated memory.",                                               spotifyId:"0rlLBWFFTQiOWi963SH9bb" },
+];
+
+let current = 0;
+let prevAngle = 0, nextAngle = 0;
+let litInterval = null;
+
+/* Speaker dots */
+const speakerEl = document.getElementById('speaker');
+for (let i = 0; i < 52; i++) {
+  const d = document.createElement('div');
+  d.className = 'speaker-dot';
+  speakerEl.appendChild(d);
+}
+
+function lightSpeaker(on) {
+  clearInterval(litInterval);
+  const dots = speakerEl.querySelectorAll('.speaker-dot');
+  dots.forEach(d => d.classList.remove('lit'));
+  if (on) {
+    litInterval = setInterval(() => {
+      dots.forEach(d => d.classList.remove('lit'));
+      const count = 8 + Math.floor(Math.random() * 14);
+      for (let i = 0; i < count; i++) {
+        dots[Math.floor(Math.random() * dots.length)].classList.add('lit');
+      }
+    }, 160);
+  }
+}
+
+/* Build tuner */
+const tunerTrack = document.getElementById('tuner-track');
+songs.forEach((s, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'tuner-btn' + (i === 0 ? ' active' : '');
+  btn.textContent = s.title;
+  btn.onclick = () => selectSong(i);
+  tunerTrack.appendChild(btn);
+});
+
+/* Build playlist */
+const songList = document.getElementById('song-list');
+songs.forEach((s, i) => {
+  const card = document.createElement('div');
+  card.className = 'song-card' + (i === 0 ? ' active' : '');
+  card.id = 'card-' + i;
+  card.innerHTML = `
+    <span class="card-num">${String(i+1).padStart(2,'0')}</span>
+    <div class="card-info">
+      <div class="card-title">${s.title}</div>
+      <div class="card-meta">${s.meta}</div>
+      <div class="card-note">${s.note}</div>
+    </div>
+    <span class="card-arrow">▶</span>
+  `;
+  card.onclick = () => selectSong(i);
+  songList.appendChild(card);
+});
+
+/* Select song */
+function selectSong(index) {
+  current = index;
+  const s = songs[index];
+
+  const titleEl = document.getElementById('display-title');
+  const metaEl  = document.getElementById('display-meta');
+  const noteEl  = document.getElementById('display-note');
+  const freqBar = document.getElementById('freq-bar');
+  const iframe  = document.getElementById('spotify-iframe');
+
+  [titleEl, metaEl, noteEl].forEach(el => el.classList.add('fade-out'));
+  iframe.style.opacity = '0';
+
+  setTimeout(() => {
+    titleEl.textContent = s.title;
+    metaEl.textContent  = s.meta;
+    noteEl.textContent  = s.note;
+    [titleEl, metaEl, noteEl].forEach(el => el.classList.remove('fade-out'));
+    titleEl.classList.add('playing');
+    document.getElementById('status-label').textContent = '▶ Now Playing';
+    iframe.src = `https://open.spotify.com/embed/track/${s.spotifyId}?utm_source=generator&theme=0`;
+    iframe.style.opacity = '1';
+  }, 300);
+
+  freqBar.classList.add('playing');
+  lightSpeaker(true);
+
+  document.querySelectorAll('.tuner-btn').forEach((b, i) => b.classList.toggle('active', i === index));
+  tunerTrack.children[index].scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  document.querySelectorAll('.song-card').forEach((c, i) => c.classList.toggle('active', i === index));
+}
+
+/* Dials */
+document.getElementById('dial-prev').addEventListener('click', () => {
+  prevAngle -= 45;
+  document.getElementById('dial-prev').style.transform = `rotate(${prevAngle}deg)`;
+  selectSong((current - 1 + songs.length) % songs.length);
+});
+
+document.getElementById('dial-next').addEventListener('click', () => {
+  nextAngle += 45;
+  document.getElementById('dial-next').style.transform = `rotate(${nextAngle}deg)`;
+  selectSong((current + 1) % songs.length);
+});
+
+document.getElementById('prev-btn').onclick = () => selectSong((current - 1 + songs.length) % songs.length);
+document.getElementById('next-btn').onclick = () => selectSong((current + 1) % songs.length);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') selectSong((current + 1) % songs.length);
+  if (e.key === 'ArrowLeft')  selectSong((current - 1 + songs.length) % songs.length);
+});
+</script>
+</body>
+</html>
